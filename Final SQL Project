@@ -1,0 +1,138 @@
+-- Here I wrote multiple queries from the Chinook database.
+
+-- Q1. Show Customers (their full names, customer ID, and country) who are not in the US. 
+-- (Hint: != or <> can be used to say "is not equal to").
+
+SELECT CustomerID, FirstName, LastName, Country
+FROM customers
+WHERE Country != 'USA';
+
+-- Q2. Show only the Customers from Brazil.
+
+SELECT CustomerID, FirstName, LastName, Country
+FROM customers
+WHERE Country = 'Brazil';
+
+-- Q3. Find the Invoices of customers who are from Brazil. 
+-- The resulting table should show the customer's full name, Invoice ID, Date of the invoice, and billing country.
+
+SELECT cust.FirstName, cust.LastName,
+inv.InvoiceId, inv.InvoiceDate, inv.BillingCountry 
+FROM customers cust
+LEFT JOIN invoices inv
+ON cust.CustomerId = inv.CustomerId
+WHERE cust.Country = 'Brazil';
+
+-- Q4. Show the Employees who are Sales Agents.
+
+--Q4a (show Titles)
+SELECT *
+FROM employees
+ORDER BY Title asc;
+
+--Q4b (filter to 'Sales Support Agent')
+SELECT *
+FROM employees
+WHERE Title = 'Sales Support Agent'
+ORDER BY LastName asc;
+
+-- Q5. Find a unique/distinct list of billing countries from the Invoice table.
+
+SELECT DISTINCT BillingCountry
+FROM invoices;
+
+-- Q6. Provide a query that shows the invoices associated with each sales agent. 
+-- The resulting table should include the Sales Agent's full name.
+
+SELECT emp.LastName, emp.FirstName, inv.InvoiceId 
+FROM employees emp
+LEFT JOIN customers cust
+ON emp.EmployeeID = cust.SupportRepID
+LEFT JOIN invoices inv
+ON cust.CustomerId = inv.CustomerId
+WHERE emp.Title = 'Sales Support Agent';
+
+-- Q7. Show the Invoice Total, Customer name, Country, and Sales Agent name for all invoices and customers.
+
+SELECT inv.Total, cust.LastName, cust.FirstName, cust.Country, emp.LastName, emp.FirstName
+FROM invoices inv
+JOIN customers cust
+ON inv.CustomerId = cust.CustomerId
+JOIN employees emp
+ON emp.EmployeeID = cust.SupportRepID;
+
+-- Q8. How many Invoices were there in 2009?
+
+-- Q8a. See how dates are written to determine filter statement.
+SELECT InvoiceDate
+FROM invoices
+LIMIT 5;
+
+-- Q8b. complete query to view how many invoices were logged in 2009.
+SELECT COUNT(InvoiceId)
+FROM invoices
+WHERE InvoiceDate LIKE '2009%';
+
+-- Q9. What are the total sales for 2009?
+
+SELECT SUM(Total)
+FROM invoices
+WHERE InvoiceDate LIKE '2009%';
+
+-- Q10. Write a query that includes the purchased track name with each invoice line ID.
+
+SELECT inv.InvoiceLineId, tracks.Name
+FROM invoice_items inv
+LEFT JOIN tracks
+ON inv.TrackId = tracks.TrackId
+ORDER BY inv.InvoiceLineId asc;
+
+-- Q11. Write a query that includes the purchased track name AND artist name with each invoice line ID.
+
+SELECT inv.InvoiceLineId, tracks.Name as Track, artists.Name as Artist
+FROM invoice_items inv
+LEFT JOIN tracks
+ON inv.TrackId = tracks.TrackId
+LEFT JOIN albums
+ON albums.AlbumId = tracks.AlbumId
+LEFT JOIN artists
+ON artists.ArtistId = albums.ArtistId
+ORDER BY inv.InvoiceLineId asc;
+
+-- Q12. Provide a query that shows all the Tracks, and include the Album name, Media type, and Genre.
+
+
+
+SELECT tracks.Name as Track
+, albums.Title as Album
+, media_types.Name as Media_Type
+, genres.Name as Genre
+FROM tracks
+LEFT JOIN albums
+ON albums.AlbumId = tracks.AlbumId
+LEFT JOIN media_types
+ON media_types.MediaTypeId = tracks.MediaTypeId
+LEFT JOIN genres
+ON genres.GenreId = tracks.GenreId;
+
+-- Q13. Show the total sales made by each sales agent.
+
+SELECT ROUND(SUM(inv.Total), 2) as Total_Sales, emp.LastName, emp.FirstName
+FROM invoices inv
+LEFT JOIN customers cust
+ON inv.CustomerId = cust.CustomerId
+LEFT JOIN employees emp
+ON emp.EmployeeId = cust.SupportRepId
+GROUP BY emp.EmployeeId;
+
+-- Q14. Which sales agent made the most dollars in sales in 2009?
+
+SELECT ROUND(SUM(inv.Total), 2) as Total_Sales, emp.LastName, emp.FirstName
+FROM invoices inv
+LEFT JOIN customers cust
+ON inv.CustomerId = cust.CustomerId
+LEFT JOIN employees emp
+ON emp.EmployeeId = cust.SupportRepId
+WHERE inv.InvoiceDate LIKE '2009%'
+GROUP BY emp.EmployeeId
+ORDER BY ROUND(SUM(inv.Total), 2) desc LIMIT 1;
